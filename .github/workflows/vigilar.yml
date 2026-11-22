@@ -2,8 +2,11 @@ name: Vigilar Stock El Corte Ingles
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/30 * * * *'
   workflow_dispatch:
+
+permissions:
+  actions: write
 
 jobs:
   comprobar-stock:
@@ -29,3 +32,9 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: python -u rastreador_ditto.py
+
+      - name: Lanzar siguiente ronda automaticamente
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run vigilar.yml
