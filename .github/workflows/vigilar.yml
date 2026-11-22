@@ -1,0 +1,31 @@
+name: Vigilar Stock El Corte Ingles
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  comprobar-stock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+
+    steps:
+      - name: Descargar codigo del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar Playwright y Chromium
+        run: |
+          pip install playwright requests
+          playwright install chromium
+          playwright install-deps
+
+      - name: Ejecutar rastreador
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: python rastreador_ditto.py
