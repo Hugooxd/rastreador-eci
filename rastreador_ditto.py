@@ -41,7 +41,7 @@ DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK", "")
 
 # Duración máxima de cada ejecución (4 minutos y 15 segundos = 255s)
 TIEMPO_MAXIMO_EJECUCION = 255
-ESPERA_ENTRE_RONDAS = 15
+ESPERA_ENTRE_RONDAS = 2
 
 
 def enviar_alerta_discord(nombre_corto, titulo_web, precio, url):
@@ -82,7 +82,7 @@ def comprobar_producto(page, producto):
 
     try:
         page.goto(url, wait_until="domcontentloaded", timeout=30000)
-        page.wait_for_timeout(3500)
+        page.wait_for_timeout(2500)
 
         boton_comprar = page.locator(
             "button:has-text('Añadir a la cesta'), button:has-text('Comprar')"
@@ -152,8 +152,8 @@ if __name__ == "__main__":
                         if encontrado:
                             avisados_en_esta_sesion.add(url)
 
-                    # Pausa humana entre producto y producto (4 a 6 seg)
-                    time.sleep(random.uniform(4, 6))
+                    # Pausa humana rápida entre producto y producto (2.5 a 4 seg)
+                    time.sleep(random.uniform(2.5, 4))
 
                 if (time.time() - inicio + ESPERA_ENTRE_RONDAS) < TIEMPO_MAXIMO_EJECUCION:
                     time.sleep(ESPERA_ENTRE_RONDAS)
