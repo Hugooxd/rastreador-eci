@@ -28,4 +28,4 @@ jobs:
       - name: Ejecutar rastreador
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: python rastreador_ditto.py
+        run: python -u rastreador_ditto.py
