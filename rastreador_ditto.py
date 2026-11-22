@@ -6,25 +6,56 @@ from datetime import datetime
 from playwright.sync_api import sync_playwright
 
 # --- CONFIGURACIÓN ---
-URL_PRODUCTO = "https://www.elcorteingles.es/juguetes/A202035453-30th-caja-coleccion-premium-ditto-de-celebracion-30-aniversario-de-jcc-pokemon-pokemon-bandai/"
+PRODUCTOS = [
+    {
+        "nombre": "Caja Ditto Premium",
+        "url": "https://www.elcorteingles.es/juguetes/A202035453-30th-caja-coleccion-premium-ditto-de-celebracion-30-aniversario-de-jcc-pokemon-pokemon-bandai/",
+    },
+    {
+        "nombre": "UPC 30 Aniversario",
+        "url": "https://www.elcorteingles.es/juguetes/A202035441-30th-caja-coleccion-ultrapremium-de-celebracion-30-aniversario-de-jcc-pokemon-pokemon-bandai-modelos-surtidos/",
+    },
+    {
+        "nombre": "Caja Mew Figura",
+        "url": "https://www.elcorteingles.es/juguetes/A202035445-30th-caja-coleccion-con-figura-de-celebracion-30-aniversario-mew-de-jcc-pokemon-pokemon-bandai/",
+    },
+    {
+        "nombre": "Caja Sylveon/Greninja EX",
+        "url": "https://www.elcorteingles.es/juguetes/A202035447-30th-caja-coleccion-ex-celebracion-30-aniversario-de-jcc-pokemon-pokemon-bandai-modelos-surtidos/",
+    },
+    {
+        "nombre": "Caja Mew/Mewtwo ING",
+        "url": "https://www.elcorteingles.es/juguetes/A202042921-30th-figure-collection-30th-celebration-box-tcgenglish-pokemon-bandai-assorted-models/",
+    },
+    {
+        "nombre": "Blister Pegatinas",
+        "url": "https://www.elcorteingles.es/juguetes/A202035442-30th-blister-coleccion-con-pegatinas-especiales-de-celebracion-30-aniversario-de-jcc-pokemon-pokemon-bandai-modelos-surtidos/",
+    },
+    {
+        "nombre": "Mini Latas Surtido",
+        "url": "https://www.elcorteingles.es/juguetes/A202035448-30th-minilata-celebracion-30-aniversario-de-jcc-pokemon-pokemon-bandai-modelos-surtidos/",
+    },
+]
+
 DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK", "")
 
 # Duración máxima de cada ejecución (4 minutos y 15 segundos = 255s)
 TIEMPO_MAXIMO_EJECUCION = 255
-ESPERA_ENTRE_COMPROBACIONES = 40
+ESPERA_ENTRE_RONDAS = 15
 
 
-def enviar_alerta_discord(titulo, precio):
+def enviar_alerta_discord(nombre_corto, titulo_web, precio, url):
     payload = {
         "username": "Alerta Stock ECI",
-        "content": "@everyone ¡HAY STOCK DISPONIBLE!",
+        "content": f"@everyone ¡HAY STOCK DE **{nombre_corto.upper()}**!",
         "embeds": [
             {
-                "title": titulo,
-                "url": URL_PRODUCTO,
-                "description": "¡El botón de compra está activo! Entra rápido antes de que se agote.",
+                "title": titulo_web,
+                "url": url,
+                "description": "¡El botón de compra está activo! Toca el título azul para entrar directo.",
                 "color": 3066993,
                 "fields": [
+                    {"name": "Producto", "value": nombre_corto, "inline": True},
                     {"name": "Precio detectado", "value": precio, "inline": True},
                     {"name": "Tienda", "value": "El Corte Inglés", "inline": True},
                 ],
@@ -37,18 +68,21 @@ def enviar_alerta_discord(titulo, precio):
     try:
         r = requests.post(DISCORD_WEBHOOK, json=payload, timeout=10)
         if r.status_code in (200, 204):
-            print("[OK] Alerta enviada correctamente a Discord.")
+            print(f"[OK] Alerta enviada a Discord para {nombre_corto}.")
         else:
             print(f"[ERROR] Discord devolvió código {r.status_code}")
     except Exception as e:
         print(f"[ERROR] No se pudo conectar con Discord: {e}")
 
 
-def comprobar_stock(page):
+def comprobar_producto(page, producto):
     ahora = datetime.now().strftime("%H:%M:%S")
+    nombre = producto["nombre"]
+    url = producto["url"]
+
     try:
-        page.goto(URL_PRODUCTO, wait_until="domcontentloaded", timeout=30000)
-        page.wait_for_timeout(4000)
+        page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        page.wait_for_timeout(3500)
 
         boton_comprar = page.locator(
             "button:has-text('Añadir a la cesta'), button:has-text('Comprar')"
@@ -62,25 +96,25 @@ def comprobar_stock(page):
                 hay_stock = True
 
         if hay_stock:
-            titulo = "Caja Colección Premium Ditto 30 Aniversario - JCC Pokémon"
+            titulo_web = nombre
             h1 = page.locator("h1").first
             if h1.count() > 0:
-                titulo = h1.inner_text().strip()
+                titulo_web = h1.inner_text().strip()
 
             precio = "Ver en enlace"
             precio_el = page.locator("[class*='price'], [data-testid*='price']").first
             if precio_el.count() > 0:
                 precio = precio_el.inner_text().strip().split("\n")[0]
 
-            print(f"[{ahora}] ¡STOCK DETECTADO! Enviando mensaje a Discord...")
-            enviar_alerta_discord(titulo, precio)
+            print(f"[{ahora}] ¡STOCK DETECTADO en {nombre}! Enviando a Discord...")
+            enviar_alerta_discord(nombre, titulo_web, precio, url)
             return True
         else:
-            print(f"[{ahora}] Sin stock todavía.")
+            print(f"[{ahora}] Sin stock: {nombre}")
             return False
 
     except Exception as e:
-        print(f"[{ahora}] Error al cargar la ficha: {e}")
+        print(f"[{ahora}] Error en {nombre}: {e}")
         return False
 
 
@@ -90,7 +124,8 @@ if __name__ == "__main__":
         exit(1)
 
     inicio = time.time()
-    print("Iniciando ronda de vigilancia de 4 minutos...")
+    avisados_en_esta_sesion = set()
+    print(f"Iniciando vigilancia de {len(PRODUCTOS)} productos...")
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
@@ -107,12 +142,21 @@ if __name__ == "__main__":
 
         try:
             while (time.time() - inicio) < TIEMPO_MAXIMO_EJECUCION:
-                encontrado = comprobar_stock(page)
-                if encontrado:
-                    break
-                if (time.time() - inicio + ESPERA_ENTRE_COMPROBACIONES) < TIEMPO_MAXIMO_EJECUCION:
-                    espera = ESPERA_ENTRE_COMPROBACIONES + random.randint(-5, 8)
-                    time.sleep(espera)
+                for producto in PRODUCTOS:
+                    if (time.time() - inicio) >= TIEMPO_MAXIMO_EJECUCION:
+                        break
+
+                    url = producto["url"]
+                    if url not in avisados_en_esta_sesion:
+                        encontrado = comprobar_producto(page, producto)
+                        if encontrado:
+                            avisados_en_esta_sesion.add(url)
+
+                    # Pausa humana entre producto y producto (4 a 6 seg)
+                    time.sleep(random.uniform(4, 6))
+
+                if (time.time() - inicio + ESPERA_ENTRE_RONDAS) < TIEMPO_MAXIMO_EJECUCION:
+                    time.sleep(ESPERA_ENTRE_RONDAS)
                 else:
                     break
         finally:
