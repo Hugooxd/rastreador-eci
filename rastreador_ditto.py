@@ -43,8 +43,8 @@ PRODUCTOS = [
 
 DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK", "")
 
-# Duración máxima de cada ejecución (4 minutos y 15 segundos = 255s)
-TIEMPO_MAXIMO_EJECUCION = 255
+# Duración máxima de cada ejecución (25 minutos = 1500s)
+TIEMPO_MAXIMO_EJECUCION = 1500
 ESPERA_ENTRE_RONDAS = 2
 
 
@@ -133,6 +133,7 @@ if __name__ == "__main__":
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
+            channel="chrome",
             headless=True,
             args=["--disable-blink-features=AutomationControlled"],
         )
