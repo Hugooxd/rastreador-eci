@@ -13,7 +13,7 @@ permissions:
 jobs:
   comprobar-stock:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 30
 
     steps:
       - name: Descargar codigo del repositorio
@@ -24,11 +24,8 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Instalar Playwright y Chromium
-        run: |
-          pip install playwright requests
-          playwright install chromium
-          playwright install-deps
+      - name: Instalar dependencias Python
+        run: pip install playwright requests
 
       - name: Ejecutar rastreador
         env:
