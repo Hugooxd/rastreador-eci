@@ -35,6 +35,10 @@ PRODUCTOS = [
         "nombre": "Mini Latas Surtido",
         "url": "https://www.elcorteingles.es/juguetes/A202035448-30th-minilata-celebracion-30-aniversario-de-jcc-pokemon-pokemon-bandai-modelos-surtidos/",
     },
+    {
+        "nombre": "Blister Sobres de Mejora",
+        "url": "https://www.elcorteingles.es/juguetes/A202035444-30th-blister-de-sobres-de-mejora-de-celebracion-30-aniversario-de-jcc-pokemon-pokemon-bandai/",
+    },
 ]
 
 DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK", "")
