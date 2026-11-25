@@ -53,7 +53,7 @@ DISCORD_WEBHOOK = os.environ.get("DISCORD_WEBHOOK", "")
 
 # Duración máxima de cada ejecución (25 minutos = 1500s)
 TIEMPO_MAXIMO_EJECUCION = 1500
-ESPERA_ENTRE_RONDAS = 2
+ESPERA_ENTRE_RONDAS = 1
 
 
 def enviar_alerta_discord(nombre_corto, titulo_web, precio, url):
@@ -93,8 +93,9 @@ def comprobar_producto(page, producto):
     url = producto["url"]
 
     try:
-        page.goto(url, wait_until="domcontentloaded", timeout=30000)
-        page.wait_for_timeout(2500)
+        page.goto(url, wait_until="domcontentloaded", timeout=25000)
+        page.wait_for_selector("h1", timeout=6000)
+        page.wait_for_timeout(800)
 
         boton_comprar = page.locator(
             "button:has-text('Añadir a la cesta'), button:has-text('Comprar')"
@@ -108,10 +109,7 @@ def comprobar_producto(page, producto):
                 hay_stock = True
 
         if hay_stock:
-            titulo_web = nombre
-            h1 = page.locator("h1").first
-            if h1.count() > 0:
-                titulo_web = h1.inner_text().strip()
+            titulo_web = page.locator("h1").first.inner_text().strip() or nombre
 
             precio = "Ver en enlace"
             precio_el = page.locator("[class*='price'], [data-testid*='price']").first
@@ -137,7 +135,7 @@ if __name__ == "__main__":
 
     inicio = time.time()
     avisados_en_esta_sesion = set()
-    print(f"Iniciando vigilancia de {len(PRODUCTOS)} productos...")
+    print(f"Iniciando vigilancia rápida de {len(PRODUCTOS)} productos...")
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
@@ -151,6 +149,15 @@ if __name__ == "__main__":
             viewport={"width": 1366, "height": 768},
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
         )
+
+        # Bloquear imágenes, fuentes y vídeos para cargar cada ficha en < 1 segundo
+        context.route(
+            "**/*",
+            lambda route: route.abort()
+            if route.request.resource_type in ("image", "media", "font")
+            else route.continue_(),
+        )
+
         page = context.new_page()
 
         try:
@@ -165,8 +172,8 @@ if __name__ == "__main__":
                         if encontrado:
                             avisados_en_esta_sesion.add(url)
 
-                    # Pausa humana rápida entre producto y producto (2.5 a 4 seg)
-                    time.sleep(random.uniform(2.5, 4))
+                    # Pausa rápida entre productos (1.5 a 2.5 seg)
+                    time.sleep(random.uniform(1.5, 2.5))
 
                 if (time.time() - inicio + ESPERA_ENTRE_RONDAS) < TIEMPO_MAXIMO_EJECUCION:
                     time.sleep(ESPERA_ENTRE_RONDAS)
