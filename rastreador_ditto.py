@@ -12,6 +12,10 @@ PRODUCTOS = [
         "url": "https://www.elcorteingles.es/juguetes/A202035453-30th-caja-coleccion-premium-ditto-de-celebracion-30-aniversario-de-jcc-pokemon-pokemon-bandai/",
     },
     {
+        "nombre": "Caja Ditto Collection ING",
+        "url": "https://www.elcorteingles.es/juguetes/A202035454-30th-ditto-collection-box-30th-celebration-pokemon-tcg-english-pokemon-bandai/",
+    },
+    {
         "nombre": "UPC 30 Aniversario",
         "url": "https://www.elcorteingles.es/juguetes/A202035441-30th-caja-coleccion-ultrapremium-de-celebracion-30-aniversario-de-jcc-pokemon-pokemon-bandai-modelos-surtidos/",
     },
@@ -26,6 +30,10 @@ PRODUCTOS = [
     {
         "nombre": "Caja Mew/Mewtwo ING",
         "url": "https://www.elcorteingles.es/juguetes/A202042921-30th-figure-collection-30th-celebration-box-tcgenglish-pokemon-bandai-assorted-models/",
+    },
+    {
+        "nombre": "Caja Poster 30 Aniversario",
+        "url": "https://www.elcorteingles.es/juguetes/A202035450-30th-caja-coleccion-con-poster-de-celebracion-30-aniversario-de-jcc-pokemon-pokemon-bandai/",
     },
     {
         "nombre": "Blister Pegatinas",
